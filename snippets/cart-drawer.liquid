@@ -11,36 +11,32 @@
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
 
 <style>
-  .priceHeading
-  {
-    color:#000000 !important;
-    font-size:15px !important;
+  .priceHeading {
+    color: #000000 !important;
+    font-size: 15px !important;
     margin: 0;
   }
-  .product-option
-  {
-  display: flex !important;
-flex-direction: column !important;
-color: #BDBEBE;
+  .product-option {
+    display: flex !important;
+    flex-direction: column !important;
+    color: #bdbebe;
   }
-  .upsellButton{
+  .upsellButton {
     background-color: #0aa1bc;
     color: #fff;
     width: 122px;
     box-shadow: none;
     outline: none;
     height: 35px;
-    }
-  .custom_cart
-  {
+  }
+  .custom_cart {
     background: #005155;
     padding: 10px;
-}
-  .custom-image
-  {
+  }
+  .custom-image {
     height: 78px;
     width: 83px;
-}
+  }
   .drawer {
     visibility: hidden;
   }
@@ -55,8 +51,7 @@ color: #BDBEBE;
       aria-modal="true"
       aria-label="{{ 'sections.cart.title' | t }}"
       tabindex="-1"
-
-     >
+    >
       {%- if cart == empty -%}
         <div class="drawer__inner-empty">
           <div class="cart-drawer__warnings center{% if settings.cart_drawer_collection != blank %} cart-drawer__warnings--has-collection{% endif %}">
@@ -88,7 +83,6 @@ color: #BDBEBE;
             </div>
           {%- endif -%}
         </div>
-    
       {%- endif -%}
       <div class="drawer__header">
         <h2 class="drawer__heading">{{ 'sections.cart.title' | t }}</h2>
@@ -106,7 +100,6 @@ color: #BDBEBE;
           class=" is-empty"
         {% endif %}
       >
-
         <form
           action="{{ routes.cart_url }}"
           id="CartDrawer-Form"
@@ -165,7 +158,6 @@ color: #BDBEBE;
                         <td class="cart-item__details" role="cell" headers="CartDrawer-ColumnProduct">
                           {%- if settings.show_vendor -%}
                             <p class="caption-with-letter-spacing light">{{ item.product.vendor }}</p>
-                     
                           {%- endif -%}
 
                           <a href="{{ item.url }}" class="cart-item__name h4 break">
@@ -184,7 +176,7 @@ color: #BDBEBE;
                                 {{ 'products.product.price.sale_price' | t }}
                               </span>
                               <strong class="cart-item__final-price product-option">
-                                {{ item.final_price | money | replace: '.00', ''  }}
+                                {{ item.final_price | money | replace: '.00', '' }}
                               </strong>
                             </div>
                           {%- else -%}
@@ -272,7 +264,7 @@ color: #BDBEBE;
                                   {{ 'products.product.price.regular_price' | t }}
                                 </span>
                                 <s class="cart-item__old-price price price--end">
-                                  {{ item.original_line_price | money | replace: '.00', ''  }}
+                                  {{ item.original_line_price | money | replace: '.00', '' }}
                                 </s>
                                 <span class="visually-hidden">
                                   {{ 'products.product.price.sale_price' | t }}
@@ -290,7 +282,7 @@ color: #BDBEBE;
                             {%- if item.variant.available and item.unit_price_measurement -%}
                               <div class="unit-price caption">
                                 <span class="visually-hidden">{{ 'products.product.price.unit_price' | t }}</span>
-                                {{ item.unit_price | money | replace: '.00', ''  }}
+                                {{ item.unit_price | money | replace: '.00', '' }}
                                 <span aria-hidden="true">/</span>
                                 <span class="visually-hidden"
                                   >&nbsp;{{ 'accessibility.unit_price_separator' | t }}&nbsp;</span
@@ -442,7 +434,9 @@ color: #BDBEBE;
                                     <ul class="list-unstyled">
                                       <li>
                                         <span>{{ item.variant.quantity_rule.min }}+</span>
-                                        <span>{{ item.variant.price | money_with_currency | replace: '.00', '' }}/ea</span>
+                                        <span>
+                                          {{- item.variant.price | money_with_currency | replace: '.00', '' }}/ea</span
+                                        >
                                       </li>
                                       {%- for price_break in item.variant.quantity_price_breaks -%}
                                         <li>
@@ -450,7 +444,9 @@ color: #BDBEBE;
                                             {{- price_break.minimum_quantity -}}
                                             <span aria-hidden="true">+</span></span
                                           >
-                                          <span>{{ price_break.price | money_with_currency | replace: '.00', '' }}/ea</span>
+                                          <span>
+                                            {{- price_break.price | money_with_currency | replace: '.00', '' }}/ea</span
+                                          >
                                         </li>
                                       {%- endfor -%}
                                     </ul>
@@ -480,112 +476,103 @@ color: #BDBEBE;
                         </td>
                       </tr>
                     {%- endfor -%}
-       <!---------------------------------------------------- Upsell Cart -------------------------------->
-       {%- assign jeans_upsell_count = 0 -%}
-       {%- for upsell_item in collections['Jeans'].products -%}
-         {%- if upsell_item.tags contains 'Upsell' and jeans_upsell_count < 0 -%}
-           <tr id="CartDrawer-Item-{{ upsell_item.index | plus: 1 }}" class="cart-item custom_cart" role="row">
-             <td class="cart-item__media" role="cell" headers="CartDrawer-ColumnProductImage">
-               <img class="custom-image" width="{{block.settings.width}}" height="{{block.settings.height}}" loading="lazy" src="{{ upsell_item.featured_image | img_url: 'large' }}" alt="{{ upsell_item.title }}">
-             </td>
-             <td class="cart-item__details" role="cell" headers="CartDrawer-ColumnProduct">
-               <div class="product-option">
-                 <h3 class="cart-item__name h4 break">{{ upsell_item.title }}</h3>
-                 <p class="product-option">{{ upsell_item.price | money | replace: '.00', '' }}</p>
-               </div>
-               <dl></dl>
-               <p class="product-option"></p>
-               <ul class="discounts list-unstyled" role="list" aria-label="Discount"></ul>
-             </td>
-             <td class="cart-item__totals right" role="cell" headers="CartDrawer-ColumnTotal">
-               <div class="loading-overlay hidden">
-                 <!-- Loading overlay content -->
-               </div>
-               <div class="cart-item__price-wrapper">
-                 <span class="price price--end">
-                   <p class="product-option priceHeading">{{ upsell_item.price | money | replace: '.00', '' }}</p>
-                 </span>
-               </div>
-             </td>
-             <td>
-               <button class="upsellButton" onclick="addToCart('{{ upsell_item.id }}')">Add to Cart</button>
-             </td>
-           </tr>
-           {%- assign jeans_upsell_count = jeans_upsell_count | plus: 1 -%}
-         {%- endif -%}
-       {%- endfor -%}
-   
-       {%- assign shirts_upsell_count = 0 -%}
-       {%- for upsell_item_shirts in collections['Shirts'].products -%}
-         {%- if upsell_item_shirts.tags contains 'Shirts' and shirts_upsell_count <2-%}
-           <tr id="CartDrawer-Item-{{ upsell_item_shirts.index | plus: 1 }}" class="cart-item custom_cart" role="row">
-             <td class="cart-item__media" role="cell" headers="CartDrawer-ColumnProductImage">
-               <img class="custom-image" width="{{block.settings.width}}" height="{{block.settings.height}}" loading="lazy" src="{{ upsell_item_shirts.featured_image | img_url: 'large' }}" alt="{{ upsell_item_shirts.title }}">
-             </td>
-             <td class="cart-item__details" role="cell" headers="CartDrawer-ColumnProduct">
-               <div class="product-option">
-                 <h3 class="cart-item__name h4 break">{{ upsell_item_shirts.title }}</h3>
-                 <p class="product-option">{{ upsell_item_shirts.price | money | replace: '.00', '' }}</p>
-               </div>
-               <dl></dl>
-               <p class="product-option"></p>
-               <ul class="discounts list-unstyled" role="list" aria-label="Discount"></ul>
-             </td>
-             <td class="cart-item__totals right" role="cell" headers="CartDrawer-ColumnTotal">
-               <div class="loading-overlay hidden">
-                 <!-- Loading overlay content -->
-               </div>
-               <div class="cart-item__price-wrapper">
-                 <span class="price price--end">
-                  <p class="product-option priceHeading">{{ upsell_item_shirts.price | money | replace: '.00', '' }}</p>
+                    <!--
+                      -------------------------------------------------- Upsell Cart ------------------------------
+                    -->
+                    {% comment %}
+                      {% capture addedProductHandle %}
+                        {% for item in cart.items %}
+                          {{ item.product.handle }}
+                        {% endfor %}
+                      {% endcapture %}
+                    {% endcomment %}
+                    {% comment %} and addedProductHandle == upsellCollection {% endcomment %}
 
-                 </span>
-               </div>
-             </td>
-             <td>
-   <button onclick="addToCart()"class="button product-add" type="submit">Add to Cart</button>
-             </td>
-           </tr>
-           {%- assign shirts_upsell_count = shirts_upsell_count | plus: 1 -%}
-         {%- endif -%}
-       {%- endfor -%}
+                    {% comment %} Define a mapping of product type to their corresponding handle {% endcomment %}
 
-    {% comment %} <tr id="CartDrawer-Item-{{ upsell_item.index | plus: 1 }}" class="cart-item custom_cart" role="row">
-      {%- assign added_item_collection = collection.handle -%}
-      {%- for upsell_item in collections['Jeans'].products -%}
-        {%- if added_item_collection == 'jeans' and upsell_item.tags contains 'Upsell' -%}
-          <!-- Display upsell items from Jeans collection -->
-          <!-- Your upsell item display code here -->
-        {%- endif -%}
-      {%- endfor -%}
-    
-      {%- for upsell_item in collections['Shirts'].products -%}
-        {%- if added_item_collection == 'shirts' and upsell_item.tags contains 'Upsell' -%}
-          <!-- Display upsell items from Shirts collection -->
-          <!-- Your upsell item display code here -->
-        {%- endif -%}
-      {%- endfor -%}
-    </tr> {% endcomment %}
-    
+                    {% assign upsellLimit = 2 %}
 
+                    {% assign productTypeMapping = 'Shirts,Jeans' %}
 
+                    {% comment %} Identify the current product type based on the handle {% endcomment %}
+                    {% assign currentProductType = product.handle | split: '-' | last %}
 
-{% comment %} 
-            {% if added_item_collection == 'jeans' %}
-              {%- for upsell_item in collections['Jeans'].products -%}
-                {%- if upsell_item.tags contains 'Upsell' -%}
-                  <!-- Upsell display code for Jeans collection -->
-                {%- endif -%}
-              {%- endfor -%}
-            {% elsif added_item_collection == 'shirts' %}
-              {%- for upsell_item in collections['Shirts'].products -%}
-                {%- if upsell_item.tags contains 'Upsell' -%}
-                  <!-- Upsell display code for Shirts collection -->
-                {%- endif -%}
-              {%- endfor -%}
-            {% endif %} {% endcomment %}
-          
-            
+                    <div class="UpsellCart">
+                      <div class="UpsellCartCont">
+                        {% for collection in collections %}
+                          {% if collection.title == currentProductType
+                            or productTypeMapping contains collection.title
+                          %}
+                            {% for product in collection.products limit: upsellLimit %}
+                              <tr class="UpsellItems upsell">
+                                <td>
+                                  <form action="/cart/add" method="post" class="UpsellForm">
+                                    <img
+                                      class="custom-image"
+                                      width="{{ block.settings.width }}"
+                                      height="{{ block.settings.height }}"
+                                      loading="lazy"
+                                      src="{{ product.featured_image | img_url: 'large' }}"
+                                    >
+                                    <strong class="product-title">{{ product.title }}</strong>
+                                    <select name="id" class="product-title">
+                                      {% for variant in product.variants %}
+                                        {% if variant.available %}
+                                          <option
+                                            {% if variant == product.selected_or_first_available_variant %}
+                                              selected="selected"
+                                            {% endif %}
+                                            data-sku="{{ variant.sku }}"
+                                            value="{{ variant.id }}"
+                                          >
+                                            {{ variant.price | money_with_currency }}
+                                          </option>
+                                        {% endif %}
+                                      {% endfor %}
+                                    </select>
+                                    <button type="submit" name="add" class="btn btn-primary">Add to Cart</button>
+                                  </form>
+                                </td>
+                              </tr>
+                            {% endfor %}
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                    {% comment %}
+                      <tr id="CartDrawer-Item-{{ upsell_item.index | plus: 1 }}" class="cart-item custom_cart" role="row">
+                        {%- assign added_item_collection = collection.handle -%}
+                        {%- for upsell_item in collections['Jeans'].products -%}
+                          {%- if added_item_collection == 'jeans' and upsell_item.tags contains 'Upsell' -%}
+                            <!-- Display upsell items from Jeans collection -->
+                            <!-- Your upsell item display code here -->
+                          {%- endif -%}
+                        {%- endfor -%}
+
+                        {%- for upsell_item in collections['Shirts'].products -%}
+                          {%- if added_item_collection == 'shirts' and upsell_item.tags contains 'Upsell' -%}
+                            <!-- Display upsell items from Shirts collection -->
+                            <!-- Your upsell item display code here -->
+                          {%- endif -%}
+                        {%- endfor -%}
+                      </tr>
+                    {% endcomment %}
+
+                    {% comment %}
+                      {% if added_item_collection == 'jeans' %}
+                        {%- for upsell_item in collections['Jeans'].products -%}
+                          {%- if upsell_item.tags contains 'Upsell' -%}
+                            <!-- Upsell display code for Jeans collection -->
+                          {%- endif -%}
+                        {%- endfor -%}
+                      {% elsif added_item_collection == 'shirts' %}
+                        {%- for upsell_item in collections['Shirts'].products -%}
+                          {%- if upsell_item.tags contains 'Upsell' -%}
+                            <!-- Upsell display code for Shirts collection -->
+                          {%- endif -%}
+                        {%- endfor -%}
+                      {% endif %}
+                    {% endcomment %}
                   </tbody>
                 </table>
               </div>
@@ -680,7 +667,6 @@ color: #BDBEBE;
       </div>
     </div>
   </div>
-
 </cart-drawer>
 
 <script>
@@ -694,47 +680,5 @@ color: #BDBEBE;
     }
 
     if (!isIE()) return;
-    const cartSubmitInput = document.createElement('input');
-    cartSubmitInput.setAttribute('name', 'checkout');
-    cartSubmitInput.setAttribute('type', 'hidden');
-    document.querySelector('#cart').appendChild(cartSubmitInput);
-    document.querySelector('#checkout').addEventListener('click', function (event) {
-      document.querySelector('#cart').submit();
-    });
-  });
-  function addToCart(productId) {
-    const product = products.find((p) => p.id === productId);
-  
-    if (!product) {
-      console.error("Product not found");
-      return;
-    }
-  
-    const addToCartForms = document.querySelectorAll('form[action="/cart/add"]');
-    addToCartForms.forEach((form) => {
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-  
-        const formData = new FormData(form);
-        formData.append('id', product.id);
-        formData.append('name', product.name);
-        formData.append('price', product.price);
-  
-        await fetch("/cart/add", {
-          method: "post",
-          body: formData,
-        });
-  
-        const res = await fetch("/cart.json");
-        const cart = await res.json();
-  
-        document.querySelectorAll(".cart-count").forEach((el) => {
-          el.textContent = cart.item_count;
-        });
-      });
-    });
   }
-  
-  
-  
 </script>
