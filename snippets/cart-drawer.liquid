@@ -11,15 +11,8 @@
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
 
 <style>
-  .priceHeading {
-    color: #000000 !important;
-    font-size: 15px !important;
-    margin: 0;
-  }
-  .product-option {
-    display: flex !important;
-    flex-direction: column !important;
-    color: #bdbebe;
+  .UpsellForm
+  {background: #005155;
   }
   .upsellButton {
     background-color: #0aa1bc;
@@ -29,10 +22,24 @@
     outline: none;
     height: 35px;
   }
-  .custom_cart {
-    background: #005155;
-    padding: 10px;
+  .drawer__button_section
+  {
+    display:flex;
+    column-gap:50px;
+    width: 100%;
+max-width: 204px;
+margin: auto;
   }
+.product-details
+{
+margin:auto;
+display:flex;
+column-gap: 129px !important;
+}
+  .product-info{
+    display: flex;
+    column-gap: 10px;
+    justify-content: center;}
   .custom-image {
     height: 78px;
     width: 83px;
@@ -476,103 +483,79 @@
                         </td>
                       </tr>
                     {%- endfor -%}
-                    <!--
-                      -------------------------------------------------- Upsell Cart ------------------------------
-                    -->
-                    {% comment %}
-                      {% capture addedProductHandle %}
-                        {% for item in cart.items %}
-                          {{ item.product.handle }}
+
+         {% comment %} -------------------------------------------------- Upsell Cart ------------------------------ {% endcomment %}
+         {% assign upsellLimit = 2 %}
+         {% assign productTypeMapping = 'Shirts,Jeans' %}
+         
+         {% comment %}
+            Get the collections of products already in the cart
+         {% endcomment %}
+         {% assign cartCollections = '' %}
+         {% for item in cart.items %}
+            {% assign product = item.product %}
+            {% for collection in product.collections %}
+                {% if cartCollections == '' %}
+                    {% assign cartCollections = collection.title %}
+                {% else %}
+                    {% assign cartCollections = cartCollections | append: ',' | append: collection.title %}
+                {% endif %}
+            {% endfor %}
+         {% endfor %}
+         
+         <div class="UpsellCart">
+            <div class="UpsellCartCont">
+                {% for collection in collections %}
+                    {% if productTypeMapping contains collection.title %}
+                        {% for product in collection.products limit: upsellLimit %}
+                            {% assign productTags = product.tags | join: ',' %}
+                            {% assign showUpsell = false %}
+         
+                            {% if cartCollections contains 'Shirts' and productTags contains 'Shirt' %}
+                                {% assign showUpsell = true %}
+                            {% elsif cartCollections contains 'Jeans' and productTags contains 'Jeans' %}
+                                {% assign showUpsell = true %}
+                            {% endif %}
+         
+                            {% if showUpsell %}
+                                <tr class="UpsellItems upsell">
+                                    <td>
+                                        <form action="/cart/add" method="post" class="UpsellForm">
+                                            <div class="product-info">
+                                                <div class="product-image">
+                                                    <img
+                                                        class="custom-image"
+                                                        width="{{ block.settings.width }}"
+                                                        height="{{ block.settings.height }}"
+                                                        loading="lazy"
+                                                        src="{{ product.featured_image | img_url: 'large' }}"
+                                                        alt="{{ product.title }}"
+                                                    >
+                                                </div>
+                                                <div class="product-details">
+                                                    <strong class="product-title">{{ product.title }}</strong>
+                                                    <span class="product-price">{{ product.price | money | replace: '.00', '' }}</span>
+                                                </div>
+                                            </div>
+         
+                                            <div class="cart-item__price-wrapper drawer__button_section">
+                                                <span class="price">
+                                                    <p class="product-option priceHeading">{{ product.price | money | replace: '.00', '' }}</p>
+                                                </span>
+                                            </div>
+                                            <input type="hidden" name="id" value="{{ product.variants.first.id }}">
+                                            {% comment %} product.variants.first.id  {% endcomment %}
+                                            <button type="submit" name="add" class="btn btn-primary upsellButton">Add to Cart</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endif %}
                         {% endfor %}
-                      {% endcapture %}
-                    {% endcomment %}
-                    {% comment %} and addedProductHandle == upsellCollection {% endcomment %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+         </div>
 
-                    {% comment %} Define a mapping of product type to their corresponding handle {% endcomment %}
-
-                    {% assign upsellLimit = 2 %}
-
-                    {% assign productTypeMapping = 'Shirts,Jeans' %}
-
-                    {% comment %} Identify the current product type based on the handle {% endcomment %}
-                    {% assign currentProductType = product.handle | split: '-' | last %}
-
-                    <div class="UpsellCart">
-                      <div class="UpsellCartCont">
-                        {% for collection in collections %}
-                          {% if collection.title == currentProductType
-                            or productTypeMapping contains collection.title
-                          %}
-                            {% for product in collection.products limit: upsellLimit %}
-                              <tr class="UpsellItems upsell">
-                                <td>
-                                  <form action="/cart/add" method="post" class="UpsellForm">
-                                    <img
-                                      class="custom-image"
-                                      width="{{ block.settings.width }}"
-                                      height="{{ block.settings.height }}"
-                                      loading="lazy"
-                                      src="{{ product.featured_image | img_url: 'large' }}"
-                                    >
-                                    <strong class="product-title">{{ product.title }}</strong>
-                                    <select name="id" class="product-title">
-                                      {% for variant in product.variants %}
-                                        {% if variant.available %}
-                                          <option
-                                            {% if variant == product.selected_or_first_available_variant %}
-                                              selected="selected"
-                                            {% endif %}
-                                            data-sku="{{ variant.sku }}"
-                                            value="{{ variant.id }}"
-                                          >
-                                            {{ variant.price | money_with_currency }}
-                                          </option>
-                                        {% endif %}
-                                      {% endfor %}
-                                    </select>
-                                    <button type="submit" name="add" class="btn btn-primary">Add to Cart</button>
-                                  </form>
-                                </td>
-                              </tr>
-                            {% endfor %}
-                          {% endif %}
-                        {% endfor %}
-                      </div>
-                    </div>
-                    {% comment %}
-                      <tr id="CartDrawer-Item-{{ upsell_item.index | plus: 1 }}" class="cart-item custom_cart" role="row">
-                        {%- assign added_item_collection = collection.handle -%}
-                        {%- for upsell_item in collections['Jeans'].products -%}
-                          {%- if added_item_collection == 'jeans' and upsell_item.tags contains 'Upsell' -%}
-                            <!-- Display upsell items from Jeans collection -->
-                            <!-- Your upsell item display code here -->
-                          {%- endif -%}
-                        {%- endfor -%}
-
-                        {%- for upsell_item in collections['Shirts'].products -%}
-                          {%- if added_item_collection == 'shirts' and upsell_item.tags contains 'Upsell' -%}
-                            <!-- Display upsell items from Shirts collection -->
-                            <!-- Your upsell item display code here -->
-                          {%- endif -%}
-                        {%- endfor -%}
-                      </tr>
-                    {% endcomment %}
-
-                    {% comment %}
-                      {% if added_item_collection == 'jeans' %}
-                        {%- for upsell_item in collections['Jeans'].products -%}
-                          {%- if upsell_item.tags contains 'Upsell' -%}
-                            <!-- Upsell display code for Jeans collection -->
-                          {%- endif -%}
-                        {%- endfor -%}
-                      {% elsif added_item_collection == 'shirts' %}
-                        {%- for upsell_item in collections['Shirts'].products -%}
-                          {%- if upsell_item.tags contains 'Upsell' -%}
-                            <!-- Upsell display code for Shirts collection -->
-                          {%- endif -%}
-                        {%- endfor -%}
-                      {% endif %}
-                    {% endcomment %}
                   </tbody>
                 </table>
               </div>
