@@ -11,17 +11,48 @@
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
 
 <style>
+  .upsell__price
+  {
+    font-size: 22px;
+  }
   .UpsellForm
-  {background: #005155;
+  {
+    background:#F0F0F0;
+    border-radius: 15px;
+    padding: 10px;
+    margin-bottom: 30px;
   }
-  .upsellButton {
+  .upsell__button{
+    border: none;
     background-color: #0aa1bc;
-    color: #fff;
-    width: 122px;
-    box-shadow: none;
-    outline: none;
-    height: 35px;
+    padding: 12px;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    border-radius: 10px;
+    color: white;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
   }
+  .upsell__details
+  {
+    display: flex;
+
+  }
+
+.product-price-wrapper {
+  text-align: right;
+}
+
+.product-price {
+  display: inline-block;
+  background-color: #f2f2f2; 
+  padding: 0px ;
+  padding-left: 116px;
+  border-radius: 5px;
+}
+
   .drawer__button_section
   {
     display:flex;
@@ -32,14 +63,15 @@ margin: auto;
   }
 .product-details
 {
-margin:auto;
-display:flex;
-column-gap: 129px !important;
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-start;
+  padding-left: 16px;
+
 }
   .product-info{
     display: flex;
-    column-gap: 10px;
-    justify-content: center;}
+  }
   .custom-image {
     height: 78px;
     width: 83px;
@@ -249,7 +281,7 @@ column-gap: 129px !important;
                             {%- endfor -%}
                           </ul>
                         </td>
-                        <td class="cart-item__totals right" role="cell" headers="CartDrawer-ColumnTotal">
+                        <td class="cart-item__totals right " role="cell" headers="CartDrawer-ColumnTotal">
                           <div class="loading-overlay hidden">
                             <div class="loading-overlay__spinner">
                               <svg
@@ -484,78 +516,6 @@ column-gap: 129px !important;
                       </tr>
                     {%- endfor -%}
 
-         {% comment %} -------------------------------------------------- Upsell Cart ------------------------------ {% endcomment %}
-         {% assign upsellLimit = 2 %}
-         {% assign productTypeMapping = 'Shirts,Jeans' %}
-         
-         {% comment %}
-            Get the collections of products already in the cart
-         {% endcomment %}
-         {% assign cartCollections = '' %}
-         {% for item in cart.items %}
-            {% assign product = item.product %}
-            {% for collection in product.collections %}
-                {% if cartCollections == '' %}
-                    {% assign cartCollections = collection.title %}
-                {% else %}
-                    {% assign cartCollections = cartCollections | append: ',' | append: collection.title %}
-                {% endif %}
-            {% endfor %}
-         {% endfor %}
-         
-         <div class="UpsellCart">
-            <div class="UpsellCartCont">
-                {% for collection in collections %}
-                    {% if productTypeMapping contains collection.title %}
-                        {% for product in collection.products limit: upsellLimit %}
-                            {% assign productTags = product.tags | join: ',' %}
-                            {% assign showUpsell = false %}
-         
-                            {% if cartCollections contains 'Shirts' and productTags contains 'Shirt' %}
-                                {% assign showUpsell = true %}
-                            {% elsif cartCollections contains 'Jeans' and productTags contains 'Jeans' %}
-                                {% assign showUpsell = true %}
-                            {% endif %}
-         
-                            {% if showUpsell %}
-                                <tr class="UpsellItems upsell">
-                                    <td>
-                                        <form action="/cart/add" method="post" class="UpsellForm">
-                                            <div class="product-info">
-                                                <div class="product-image">
-                                                    <img
-                                                        class="custom-image"
-                                                        width="{{ block.settings.width }}"
-                                                        height="{{ block.settings.height }}"
-                                                        loading="lazy"
-                                                        src="{{ product.featured_image | img_url: 'large' }}"
-                                                        alt="{{ product.title }}"
-                                                    >
-                                                </div>
-                                                <div class="product-details">
-                                                    <strong class="product-title">{{ product.title }}</strong>
-                                                    <span class="product-price">{{ product.price | money | replace: '.00', '' }}</span>
-                                                </div>
-                                            </div>
-         
-                                            <div class="cart-item__price-wrapper drawer__button_section">
-                                                <span class="price">
-                                                    <p class="product-option priceHeading">{{ product.price | money | replace: '.00', '' }}</p>
-                                                </span>
-                                            </div>
-                                            <input type="hidden" name="id" value="{{ product.variants.first.id }}">
-                                            {% comment %} product.variants.first.id  {% endcomment %}
-                                            <button type="submit" name="add" class="btn btn-primary upsellButton">Add to Cart</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
-                    {% endif %}
-                {% endfor %}
-            </div>
-         </div>
-
                   </tbody>
                 </table>
               </div>
@@ -567,6 +527,99 @@ column-gap: 129px !important;
           </div>
           <div id="CartDrawer-CartErrors" role="alert"></div>
         </form>
+
+         {% comment %} -------------------------------------------------- Upsell Cart ------------------------------ {% endcomment %}
+         
+         {% assign upsellLimit = 2 %}
+         {% assign productTypeMapping = 'Shirts,Jeans' %}
+         
+         {% assign cartCollections = '' %}
+         {% for item in cart.items %}
+             {% assign product = item.product %}
+             {% for collection in product.collections %}
+                 {% if cartCollections == '' %}
+                     {% assign cartCollections = collection.title %}
+                 {% else %}
+                     {% assign cartCollections = cartCollections | append: ',' | append: collection.title %}
+                 {% endif %}
+             {% endfor %}
+         {% endfor %}
+         
+         {% assign addedUpsellProducts = '' %}
+         {% for item in cart.items %}
+             {% assign product = item.product %}
+             {% assign productTags = product.tags | join: ',' %}
+             
+             {% if productTypeMapping contains productTags %}
+                 {% assign addedUpsellProducts = addedUpsellProducts | append: ',' | append: product.id %}
+             {% endif %}
+         {% endfor %}
+         
+         {% assign displayedUpsells = 0 %}
+         {% assign processedUpsellProducts = '' %} 
+         {% for item in cart.items %}
+             {% assign product = item.product %}
+             {% assign productTags = product.tags | join: ',' %}
+             
+             {% if productTypeMapping contains productTags %}
+                 {% for collection in product.collections %}
+                     {% if productTypeMapping contains collection.title %}
+                         {% for upsellProduct in collection.products %}
+                             {% assign upsellProductTags = upsellProduct.tags | join: ',' %}
+                             {% assign showUpsell = false %}
+                             
+                             {% if cartCollections contains 'Shirts' and upsellProductTags contains 'Shirt' %}
+                                 {% assign showUpsell = true %}
+                             {% elsif cartCollections contains 'Jeans' and upsellProductTags contains 'Jeans' %}
+                                 {% assign showUpsell = true %}
+                             {% endif %}
+                             
+                             {% if showUpsell %}
+                                 {% unless addedUpsellProducts contains upsellProduct.id %}
+                                     {% unless processedUpsellProducts contains upsellProduct.id %} 
+                                         {% if displayedUpsells < upsellLimit %}
+                                             {% assign displayedUpsells = displayedUpsells | plus: 1 %}
+                                             {% assign processedUpsellProducts = processedUpsellProducts | append: ',' | append: upsellProduct.id %} 
+                                             
+                                             <tr class="UpsellItems upsell">
+                                                 <td>
+                                                     <form action="/cart/add" method="post" class="UpsellForm">
+                                                         <div class="product-info">
+                                                             <div class="product-image">
+                                                                 <img
+                                                                     class="custom-image"
+                                                                     width="{{ block.settings.width }}"
+                                                                     height="{{ block.settings.height }}"
+                                                                     loading="lazy"
+                                                                     src="{{ upsellProduct.featured_image | img_url: 'large' }}"
+                                                                     alt="{{ upsellProduct.title }}"
+                                                                 >
+                                                             </div>
+                                                             <div class="product-details">
+                                                                 <div class="upsell__details">
+                                                                     <strong class="product-title">{{ upsellProduct.title }}</strong>
+                                                                     <div class="product-price-wrapper">
+                                                                         <span class="cart-item__totals product-price">{{ upsellProduct.price | money | replace: '.00', '' }}</span>
+                                                                     </div>
+                                                                 </div>
+                                                                 <div class="add-to-cart-wrapper">
+                                                                     <input type="hidden" name="id" value="{{ upsellProduct.variants.first.id }}">
+                                                                     <input type="submit" value="Add to cart" class="btn upsell__button" />
+                                                                 </div>
+                                                             </div>
+                                                         </div>
+                                                     </form>
+                                                 </td>
+                                             </tr>
+                                         {% endif %}
+                                     {% endunless %}
+                                 {% endunless %}
+                             {% endif %}
+                         {% endfor %}
+                     {% endif %}
+                 {% endfor %}
+             {% endif %}
+         {% endfor %}
       </cart-drawer-items>
       <div class="drawer__footer">
         {%- if settings.show_cart_note -%}
@@ -658,10 +711,15 @@ column-gap: 129px !important;
       const ua = window.navigator.userAgent;
       const msie = ua.indexOf('MSIE ');
       const trident = ua.indexOf('Trident/');
-
       return msie > 0 || trident > 0;
     }
-
     if (!isIE()) return;
-  }
+    const cartSubmitInput = document.createElement('input');
+    cartSubmitInput.setAttribute('name', 'checkout');
+    cartSubmitInput.setAttribute('type', 'hidden');
+    document.querySelector('#cart').appendChild(cartSubmitInput);
+    document.querySelector('#checkout').addEventListener('click', function (event) {
+      document.querySelector('#cart').submit();
+    });
+  });
 </script>
