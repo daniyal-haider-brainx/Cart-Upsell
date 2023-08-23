@@ -11,6 +11,66 @@
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
 
 <style>
+  .upsell__price
+  {
+    font-size: 22px;
+  }
+  .upsell__UpsellForm
+  {
+    background:#F0F0F0;
+    border-radius: 15px;
+    padding: 10px;
+    margin-bottom: 30px;
+  }
+  .upsell__button{
+    border: none;
+    background-color: #0aa1bc;
+    padding: 12px;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    border-radius: 10px;
+    color: white;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .upsell__details
+  {
+    display: flex;
+  }
+  .upsell__price-wrapper {
+    text-align: right;
+  }
+  .product-price {
+    display: inline-block;
+    background-color: #f2f2f2; 
+    padding: 0px ;
+    padding-left: 116px;
+    border-radius: 5px;
+  }
+  .drawer__button_section
+  {
+    display:flex;
+    column-gap:50px;
+    width: 100%;
+    max-width: 204px;
+    margin: auto;
+  }
+  .upsell__product-details
+  {
+    display: flex;
+    flex-direction: column; 
+    align-items: flex-start;
+    padding-left: 16px;
+  }
+  .upsell__product-info{
+    display: flex;
+  }
+  .upsell__custom-image {
+    height: 78px;
+    width: 83px;
+  }
   .drawer {
     visibility: hidden;
   }
@@ -144,18 +204,18 @@
                                 {{ 'products.product.price.regular_price' | t }}
                               </span>
                               <s class="cart-item__old-price product-option">
-                                {{- item.original_price | money -}}
+                                {{- item.original_price | money | replace: '.00', '' -}}
                               </s>
                               <span class="visually-hidden">
                                 {{ 'products.product.price.sale_price' | t }}
                               </span>
                               <strong class="cart-item__final-price product-option">
-                                {{ item.final_price | money }}
+                                {{ item.final_price | money | replace: '.00', '' }}
                               </strong>
                             </div>
                           {%- else -%}
                             <div class="product-option">
-                              {{ item.original_price | money }}
+                              {{ item.original_price | money | replace: '.00', '' }}
                             </div>
                           {%- endif -%}
 
@@ -216,8 +276,7 @@
                             {%- endfor -%}
                           </ul>
                         </td>
-
-                        <td class="cart-item__totals right" role="cell" headers="CartDrawer-ColumnTotal">
+                        <td class="cart-item__totals right " role="cell" headers="CartDrawer-ColumnTotal">
                           <div class="loading-overlay hidden">
                             <div class="loading-overlay__spinner">
                               <svg
@@ -239,25 +298,25 @@
                                   {{ 'products.product.price.regular_price' | t }}
                                 </span>
                                 <s class="cart-item__old-price price price--end">
-                                  {{ item.original_line_price | money }}
+                                  {{ item.original_line_price | money | replace: '.00', '' }}
                                 </s>
                                 <span class="visually-hidden">
                                   {{ 'products.product.price.sale_price' | t }}
                                 </span>
                                 <span class="price price--end">
-                                  {{ item.final_line_price | money }}
+                                  {{ item.final_line_price | money | replace: '.00', '' }}
                                 </span>
                               </div>
                             {%- else -%}
                               <span class="price price--end">
-                                {{ item.original_line_price | money }}
+                                {{ item.original_line_price | money | replace: '.00', '' }}
                               </span>
                             {%- endif -%}
 
                             {%- if item.variant.available and item.unit_price_measurement -%}
                               <div class="unit-price caption">
                                 <span class="visually-hidden">{{ 'products.product.price.unit_price' | t }}</span>
-                                {{ item.unit_price | money }}
+                                {{ item.unit_price | money | replace: '.00', '' }}
                                 <span aria-hidden="true">/</span>
                                 <span class="visually-hidden"
                                   >&nbsp;{{ 'accessibility.unit_price_separator' | t }}&nbsp;</span
@@ -409,7 +468,9 @@
                                     <ul class="list-unstyled">
                                       <li>
                                         <span>{{ item.variant.quantity_rule.min }}+</span>
-                                        <span>{{ item.variant.price | money_with_currency }}/ea</span>
+                                        <span>
+                                          {{- item.variant.price | money_with_currency | replace: '.00', '' }}/ea</span
+                                        >
                                       </li>
                                       {%- for price_break in item.variant.quantity_price_breaks -%}
                                         <li>
@@ -417,7 +478,9 @@
                                             {{- price_break.minimum_quantity -}}
                                             <span aria-hidden="true">+</span></span
                                           >
-                                          <span>{{ price_break.price | money_with_currency }}/ea</span>
+                                          <span>
+                                            {{- price_break.price | money_with_currency | replace: '.00', '' }}/ea</span
+                                          >
                                         </li>
                                       {%- endfor -%}
                                     </ul>
@@ -447,6 +510,7 @@
                         </td>
                       </tr>
                     {%- endfor -%}
+
                   </tbody>
                 </table>
               </div>
@@ -458,6 +522,100 @@
           </div>
           <div id="CartDrawer-CartErrors" role="alert"></div>
         </form>
+
+         {% comment %} -------------------------------------------------- Upsell Cart ------------------------------ {% endcomment %}
+         
+         {% assign upsellLimit = 2 %}
+         {% assign productTypeMapping = 'Shirts,Jeans' %}
+         
+         {% assign cartCollections = '' %}
+         {% for item in cart.items %}
+             {% assign product = item.product %}
+             {% for collection in product.collections %}
+                 {% if cartCollections == '' %}
+                     {% assign cartCollections = collection.title %}
+                 {% else %}
+                     {% assign cartCollections = cartCollections | append: ',' | append: collection.title %}
+                 {% endif %}
+             {% endfor %}
+         {% endfor %}
+         
+         {% assign addedUpsellProducts = '' %}
+         {% for item in cart.items %}
+             {% assign product = item.product %}
+             {% assign productTags = product.tags | join: ',' %}
+             
+             {% if productTypeMapping contains productTags %}
+                 {% assign addedUpsellProducts = addedUpsellProducts | append: ',' | append: product.id %}
+             {% endif %}
+         {% endfor %}
+         
+         {% assign displayedUpsells = 0 %}
+         {% assign processedUpsellProducts = '' %} 
+         {% for item in cart.items %}
+             {% assign product = item.product %}
+             {% assign productTags = product.tags | join: ',' %}
+             
+             {% if productTypeMapping contains productTags %}
+                 {% for collection in product.collections %}
+                     {% if productTypeMapping contains collection.title %}
+                         {% for upsellProduct in collection.products %}
+                             {% assign upsellProductTags = upsellProduct.tags | join: ',' %}
+                             {% assign showUpsell = false %}
+                             {% if cartCollections contains 'Shirts' and upsellProductTags contains 'Shirt' %}
+                              {% assign showUpsell = true %}
+                          {% elsif cartCollections contains 'Jeans' and upsellProductTags contains 'Jeans' %}
+                              {% assign showUpsell = true %}
+                          {% endif %}
+                             {% if showUpsell %}
+                                 {% unless addedUpsellProducts contains upsellProduct.id %}
+                                     {% unless processedUpsellProducts contains upsellProduct.id %} 
+                                         {% if displayedUpsells < upsellLimit %}
+                                             {% assign displayedUpsells = displayedUpsells | plus: 1 %}
+                                             {% assign processedUpsellProducts = processedUpsellProducts | append: ',' | append: upsellProduct.id %} 
+                                             
+                                             <tr class="upsell">
+                                                 <td>
+                                                     <form action="/cart/add" method="post" class="upsell__UpsellForm">
+                                                         <div class="upsell__product-info">
+                                                             <div class="upsell__product-image">
+                                                                 <img
+                                                                     class="upsell__custom-image"
+                                                                     width="{{ block.settings.width }}"
+                                                                     height="{{ block.settings.height }}"
+                                                                     loading="lazy"
+                                                                     src="{{ upsellProduct.featured_image | img_url: 'large' }}"
+                                                                     alt="{{ upsellProduct.title }}"
+                                                                 >
+                                                             </div>
+                                                             <div class="upsell__product-details">
+                                                                 <div class="upsell__details">
+                                                                     <strong class="upsell__product-title">{{ upsellProduct.title }}</strong>
+                                                                     <div class="upsell__price-wrapper">
+                                                                         <span class="cart-item__totals product-price">{{ upsellProduct.price | money | replace: '.00', '' }}</span>
+                                                                     </div>
+                                                                 </div>
+                                                                 <div class="upsell__cart">
+                                                                     <input type="hidden" name="id" value="{{ upsellProduct.variants.first.id }}">
+                                                                     <input type="submit" value="Add to cart" class="btn upsell__button" />
+                                                                 </div>
+                                                             </div>
+                                                         </div>
+                                                     </form>
+                                                 </td>
+                                             </tr>
+                                         {% endif %}
+                                     {% endunless %}
+                                 {% endunless %}
+                             {% endif %}
+                         {% endfor %}
+                     {% endif %}
+                 {% endfor %}
+             {% endif %}
+         {% endfor %}
+         
+         
+        
       </cart-drawer-items>
       <div class="drawer__footer">
         {%- if settings.show_cart_note -%}
@@ -491,7 +649,7 @@
                   <li class="discounts__discount discounts__discount--end">
                     {%- render 'icon-discount' -%}
                     {{ discount.title }}
-                    (-{{ discount.total_allocated_amount | money }})
+                    (-{{ discount.total_allocated_amount | money | replace: '.00', '' }})
                   </li>
                 {%- endfor -%}
               </ul>
@@ -500,7 +658,7 @@
 
           <div class="totals" role="status">
             <h2 class="totals__total">{{ 'sections.cart.estimated_total' | t }}</h2>
-            <p class="totals__total-value">{{ cart.total_price | money_with_currency }}</p>
+            <p class="totals__total-value">{{ cart.total_price | money_with_currency | replace: '.00', '' }}</p>
           </div>
 
           <small class="tax-note caption-large rte">
@@ -549,10 +707,8 @@
       const ua = window.navigator.userAgent;
       const msie = ua.indexOf('MSIE ');
       const trident = ua.indexOf('Trident/');
-
       return msie > 0 || trident > 0;
     }
-
     if (!isIE()) return;
     const cartSubmitInput = document.createElement('input');
     cartSubmitInput.setAttribute('name', 'checkout');
