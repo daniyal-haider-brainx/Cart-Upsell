@@ -15,7 +15,7 @@
   {
     font-size: 22px;
   }
-  .upsell__UpsellForm
+  .UpsellForm
   {
     background:#F0F0F0;
     border-radius: 15px;
@@ -41,7 +41,7 @@
 
   }
 
-.upsell__product-price-wrapper {
+.product-price-wrapper {
   text-align: right;
 }
 
@@ -61,7 +61,7 @@
 max-width: 204px;
 margin: auto;
   }
-.upsell__product-details
+.product-details
 {
   display: flex;
   flex-direction: column; 
@@ -69,10 +69,10 @@ margin: auto;
   padding-left: 16px;
 
 }
-  .upsell__product-info{
+  .product-info{
     display: flex;
   }
-  .upsell__custom-image {
+  .custom-image {
     height: 78px;
     width: 83px;
   }
@@ -535,7 +535,8 @@ margin: auto;
          
          {% assign cartCollections = '' %}
          {% for item in cart.items %}
-             {% for collection in item.product.collections %}
+             {% assign product = item.product %}
+             {% for collection in product.collections %}
                  {% if cartCollections == '' %}
                      {% assign cartCollections = collection.title %}
                  {% else %}
@@ -567,9 +568,12 @@ margin: auto;
                              {% assign upsellProductTags = upsellProduct.tags | join: ',' %}
                              {% assign showUpsell = false %}
                              
-                             {% if cartCollections contains 'Shirts' and upsellProductTags contains 'Shirt' or cartCollections contains 'Jeans' and upsellProductTags contains 'Jeans' %}
-                            {% assign showUpsell = true %}
-                        {% endif %}     
+                             {% if cartCollections contains 'Shirts' and upsellProductTags contains 'Shirt' %}
+                                 {% assign showUpsell = true %}
+                             {% elsif cartCollections contains 'Jeans' and upsellProductTags contains 'Jeans' %}
+                                 {% assign showUpsell = true %}
+                             {% endif %}
+                             
                              {% if showUpsell %}
                                  {% unless addedUpsellProducts contains upsellProduct.id %}
                                      {% unless processedUpsellProducts contains upsellProduct.id %} 
@@ -577,13 +581,13 @@ margin: auto;
                                              {% assign displayedUpsells = displayedUpsells | plus: 1 %}
                                              {% assign processedUpsellProducts = processedUpsellProducts | append: ',' | append: upsellProduct.id %} 
                                              
-                                             <tr class="upsell">
+                                             <tr class="UpsellItems upsell">
                                                  <td>
-                                                     <form action="/cart/add" method="post" class="upsell__UpsellForm">
-                                                         <div class="upsell__product-info">
-                                                             <div class="upsell__product-image">
+                                                     <form action="/cart/add" method="post" class="UpsellForm">
+                                                         <div class="product-info">
+                                                             <div class="product-image">
                                                                  <img
-                                                                     class="upsell__custom-image"
+                                                                     class="custom-image"
                                                                      width="{{ block.settings.width }}"
                                                                      height="{{ block.settings.height }}"
                                                                      loading="lazy"
@@ -591,14 +595,14 @@ margin: auto;
                                                                      alt="{{ upsellProduct.title }}"
                                                                  >
                                                              </div>
-                                                             <div class="upsell__product-details">
+                                                             <div class="product-details">
                                                                  <div class="upsell__details">
-                                                                     <strong class="upsell__product-title">{{ upsellProduct.title }}</strong>
-                                                                     <div class="upsell__product-price-wrapper">
+                                                                     <strong class="product-title">{{ upsellProduct.title }}</strong>
+                                                                     <div class="product-price-wrapper">
                                                                          <span class="cart-item__totals product-price">{{ upsellProduct.price | money | replace: '.00', '' }}</span>
                                                                      </div>
                                                                  </div>
-                                                                 <div class="upsell__cart">
+                                                                 <div class="add-to-cart-wrapper">
                                                                      <input type="hidden" name="id" value="{{ upsellProduct.variants.first.id }}">
                                                                      <input type="submit" value="Add to cart" class="btn upsell__button" />
                                                                  </div>
@@ -616,6 +620,9 @@ margin: auto;
                  {% endfor %}
              {% endif %}
          {% endfor %}
+         
+         
+        
       </cart-drawer-items>
       <div class="drawer__footer">
         {%- if settings.show_cart_note -%}
